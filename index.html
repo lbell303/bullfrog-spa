@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Spa Manager">
+<meta name="theme-color" content="#1D9E75">
+<title>Bullfrog Spa Manager</title>
+<style>
+  :root {
+    --teal: #1D9E75;
+    --teal-dark: #0F6E56;
+    --teal-bg: #E1F5EE;
+    --teal-text: #085041;
+    --teal-mid: #9FE1CB;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --blue-mid: #185FA5;
+    --blue-light: #B5D4F4;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --amber-mid: #FAC775;
+    --red-bg: #FCEBEB;
+    --red-text: #791F1F;
+    --gray-bg: #F1EFE8;
+    --gray-text: #444441;
+    --coral-bg: #FAECE7;
+    --surface: #ffffff;
+    --surface-2: #f8f7f5;
+    --surface-3: #f1efe8;
+    --text-1: #1a1a18;
+    --text-2: #5f5e5a;
+    --text-3: #888780;
+    --border: rgba(0,0,0,0.12);
+    --border-2: rgba(0,0,0,0.2);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --teal: #5DCAA5;
+      --teal-dark: #9FE1CB;
+      --teal-bg: #04342C;
+      --teal-text: #9FE1CB;
+      --blue-bg: #042C53;
+      --blue-text: #85B7EB;
+      --blue-mid: #85B7EB;
+      --blue-light: #0C447C;
+      --amber-bg: #412402;
+      --amber-text: #FAC775;
+      --amber-mid: #EF9F27;
+      --red-bg: #501313;
+      --red-text: #F09595;
+      --gray-bg: #2C2C2A;
+      --gray-text: #B4B2A9;
+      --coral-bg: #4A1B0C;
+      --surface: #1c1c1a;
+      --surface-2: #242422;
+      --surface-3: #2c2c2a;
+      --text-1: #f1efe8;
+      --text-2: #b4b2a9;
+      --text-3: #888780;
+      --border: rgba(255,255,255,0.1);
+      --border-2: rgba(255,255,255,0.2);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--surface-2); font-family: var(--font); color: var(--text-1); }
+  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--surface-2); position: relative; }
+
+  /* NAV */
+  .nav { display: flex; background: var(--surface); border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 100; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn { flex-shrink: 0; padding: 13px 12px; border: none; background: none; cursor: pointer; font-size: 12px; font-family: var(--font); color: var(--text-2); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+  .nav-btn.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+
+  /* SECTIONS */
+  .section { display: none; padding: 16px; padding-bottom: 40px; }
+  .section.active { display: block; }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+  .page-sub { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.4; }
+  .section-label { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; margin-top: 24px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 12px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+  .card-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .icon-teal { background: var(--teal-bg); }
+  .icon-blue { background: var(--blue-bg); }
+  .icon-amber { background: var(--amber-bg); }
+  .icon-coral { background: var(--coral-bg); }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+  .card-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .card-arrow { margin-left: auto; color: var(--text-3); font-size: 18px; flex-shrink: 0; transition: transform 0.2s; }
+  .card-body { display: none; border-top: 0.5px solid var(--border); padding: 16px; }
+  .card-body.open { display: block; }
+  .card-arrow.open { transform: rotate(90deg); }
+
+  /* STEPS */
+  .step { display: flex; gap: 12px; margin-bottom: 14px; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--teal); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-text { font-size: 14px; color: var(--text-1); line-height: 1.55; }
+  .step-text strong { font-weight: 600; }
+
+  /* CALLOUTS */
+  .tip { background: var(--teal-bg); border-radius: var(--radius-md); padding: 11px 13px; margin-top: 12px; }
+  .tip p { font-size: 13px; color: var(--teal-text); line-height: 1.5; }
+  .warn { background: var(--amber-bg); border-radius: var(--radius-md); padding: 11px 13px; margin-top: 12px; }
+  .warn p { font-size: 13px; color: var(--amber-text); line-height: 1.5; }
+  .info-box { background: var(--surface-2); border-radius: var(--radius-md); padding: 11px 13px; margin-bottom: 16px; }
+  .info-box p { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+  /* SUPPORT BANNER */
+  .support-banner { display: flex; align-items: center; gap: 12px; background: var(--blue-bg); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 20px; text-decoration: none; }
+  .support-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .support-title { font-size: 14px; font-weight: 600; color: var(--blue-text); }
+  .support-sub { font-size: 12px; color: var(--blue-mid); margin-top: 2px; }
+  .support-arrow { margin-left: auto; color: var(--blue-mid); font-size: 18px; }
+
+  /* TROUBLE TAGS */
+  .trouble-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; }
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+  .tag-water { background: var(--blue-bg); color: var(--blue-text); }
+  .tag-smell { background: var(--amber-bg); color: var(--amber-text); }
+  .tag-equipment { background: var(--red-bg); color: var(--red-text); }
+  .tag-foam { background: var(--teal-bg); color: var(--teal-text); }
+  .cause-label { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 5px; }
+  .cause-text { font-size: 14px; color: var(--text-1); line-height: 1.55; margin-bottom: 14px; }
+  .support-inline { display: flex; align-items: center; gap: 8px; background: var(--blue-bg); border-radius: var(--radius-md); padding: 12px 14px; text-decoration: none; margin-top: 8px; }
+  .support-inline-text { font-size: 14px; color: var(--blue-text); font-weight: 600; }
+  .support-inline-sub { font-size: 12px; color: var(--blue-mid); margin-top: 1px; }
+
+  /* TEST STRIP */
+  .camera-area { border: 1.5px dashed var(--border-2); border-radius: var(--radius-lg); padding: 36px 16px; text-align: center; cursor: pointer; background: var(--surface-2); margin-bottom: 16px; transition: background 0.15s; }
+  .camera-area:hover { background: var(--surface-3); }
+  .camera-icon { font-size: 36px; margin-bottom: 10px; }
+  .camera-label { font-size: 16px; font-weight: 600; color: var(--text-1); }
+  .camera-sub { font-size: 13px; color: var(--text-2); margin-top: 5px; }
+  #file-input { display: none; }
+  #preview-img { width: 100%; border-radius: var(--radius-lg); margin-bottom: 16px; display: none; max-height: 220px; object-fit: cover; }
+  .btn-primary { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: var(--radius-lg); font-size: 16px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s; display: none; }
+  .btn-primary:hover { background: var(--teal-dark); }
+  .btn-primary:disabled { background: var(--surface-3); color: var(--text-3); cursor: not-allowed; }
+
+  /* RESULTS */
+  .results-area { display: none; margin-top: 20px; }
+  .results-title { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 12px; }
+  .overall-ok { background: var(--teal-bg); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; }
+  .overall-ok .ov-title { font-size: 15px; font-weight: 600; color: var(--teal-text); }
+  .overall-ok .ov-sub { font-size: 13px; color: var(--teal); margin-top: 4px; }
+  .overall-warn { background: var(--amber-bg); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; }
+  .overall-warn .ov-title { font-size: 15px; font-weight: 600; color: var(--amber-text); }
+  .overall-warn .ov-sub { font-size: 13px; color: var(--amber-mid); margin-top: 4px; }
+  .chem-row { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; }
+  .chem-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .chem-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+  .chem-val-ok { font-size: 14px; font-weight: 600; color: var(--teal-dark); }
+  .chem-val-low { font-size: 14px; font-weight: 600; color: var(--amber-text); }
+  .chem-val-high { font-size: 14px; font-weight: 600; color: var(--red-text); }
+  .chem-range { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+  .chem-action { font-size: 13px; color: var(--text-1); line-height: 1.45; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .badge-ok { background: var(--teal-bg); color: var(--teal-text); }
+  .badge-low { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-high { background: var(--red-bg); color: var(--red-text); }
+
+  /* LOG */
+  .log-entry { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; }
+  .log-date { font-size: 12px; color: var(--text-2); margin-bottom: 7px; }
+  .log-chems { display: flex; gap: 6px; flex-wrap: wrap; }
+  .log-chem { font-size: 12px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); font-size: 14px; line-height: 1.6; }
+  .btn-ghost { width: 100%; padding: 11px; background: none; border: 0.5px solid var(--border-2); border-radius: var(--radius-md); font-size: 13px; color: var(--text-2); cursor: pointer; font-family: var(--font); margin-top: 8px; transition: background 0.15s; }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  /* SCHEDULE */
+  .sched-task { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 13px 14px; margin-bottom: 8px; }
+  .sched-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
+  .sched-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+  .freq { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+  .freq-weekly { background: var(--teal-bg); color: var(--teal-text); }
+  .freq-monthly { background: var(--blue-bg); color: var(--blue-text); }
+  .freq-quarterly { background: var(--amber-bg); color: var(--amber-text); }
+  .freq-asneeded { background: var(--gray-bg); color: var(--gray-text); }
+  .sched-desc { font-size: 13px; color: var(--text-2); line-height: 1.4; margin-top: 2px; }
+  .cal-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: none; border: 0.5px solid var(--border-2); border-radius: var(--radius-md); font-size: 12px; font-weight: 600; color: var(--text-1); cursor: pointer; font-family: var(--font); margin-top: 10px; transition: background 0.15s; }
+  .cal-btn:hover { background: var(--surface-2); }
+  .cal-dot { width: 10px; height: 10px; border-radius: 2px; background: var(--teal); flex-shrink: 0; }
+  .btn-add-all { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: var(--radius-lg); font-size: 16px; font-weight: 600; cursor: pointer; font-family: var(--font); margin-bottom: 16px; transition: background 0.15s; }
+  .btn-add-all:hover { background: var(--teal-dark); }
+
+  /* SUPPLIES */
+  .supply-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 10px; }
+  .supply-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .supply-name { font-size: 15px; font-weight: 600; color: var(--text-1); }
+  .supply-desc { font-size: 13px; color: var(--text-2); line-height: 1.45; margin-bottom: 12px; }
+  .supply-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .shop-link { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; text-decoration: none; border: 0.5px solid; transition: opacity 0.15s; }
+  .shop-link:hover { opacity: 0.8; }
+  .link-bullfrog { background: var(--teal-bg); color: var(--teal-text); border-color: var(--teal-mid); }
+  .link-amazon { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-mid); }
+
+  /* SPINNER */
+  .loading-msg { text-align: center; padding: 28px; color: var(--text-2); font-size: 14px; }
+  .spinner { display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-2); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* API KEY SETUP */
+  .setup-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
+  .setup-title { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 8px; }
+  .setup-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; margin-bottom: 14px; }
+  .setup-input { width: 100%; padding: 11px 13px; border: 0.5px solid var(--border-2); border-radius: var(--radius-md); font-size: 14px; font-family: var(--font); background: var(--surface-2); color: var(--text-1); margin-bottom: 10px; }
+  .setup-input:focus { outline: none; border-color: var(--teal); }
+  .btn-save { padding: 10px 20px; background: var(--teal); color: white; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+</style>
+</head>
+<body>
+<div id="app">
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('guides',this)">Guides</button>
+    <button class="nav-btn" onclick="showSection('analyze',this)">Test strip</button>
+    <button class="nav-btn" onclick="showSection('log',this)">Log</button>
+    <button class="nav-btn" onclick="showSection('trouble',this)">Fix it</button>
+    <button class="nav-btn" onclick="showSection('schedule',this)">Schedule</button>
+    <button class="nav-btn" onclick="showSection('supplies',this)">Supplies</button>
+  </nav>
+
+  <!-- GUIDES -->
+  <div id="guides" class="section active">
+    <p class="page-title">How-to guides</p>
+    <p class="page-sub">Step-by-step maintenance for your Bullfrog spa</p>
+
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-icon icon-teal">💧</div>
+        <div><div class="card-title">Weekly chemical check</div><div class="card-meta">Every 7 days · 15 min</div></div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Remove cover and run jets for <strong>5 minutes</strong> before testing — this circulates water for an accurate reading.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Dip test strip at elbow depth for <strong>2 seconds</strong>, hold flat for 15 seconds before reading.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Check: <strong>FC (3–5 ppm)</strong>, <strong>pH (7.4–7.6)</strong>, <strong>TA (80–120 ppm)</strong>, <strong>CH (150–250 ppm)</strong>, <strong>CYA (30–50 ppm)</strong>.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Use the Test Strip tab to photograph your strip for specific dosing recommendations.</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">Add chemicals one at a time with jets running. Wait <strong>15 minutes between additions</strong>.</div></div>
+        <div class="tip"><p>Using FROG @ease SmartChlor? Test every 10–14 days instead of weekly.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-icon icon-blue">🔄</div>
+        <div><div class="card-title">Monthly filter clean</div><div class="card-meta">Every 30 days · 20 min</div></div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Power off the spa at the control panel before removing filters.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Locate and remove the filter cartridge from the equipment bay or jetpak access panel.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Rinse with a garden hose at <strong>low pressure</strong>, working top to bottom between each pleat.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Soak in filter cleaner solution for 1 hour, rinse thoroughly, and reinstall.</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">Replace filters every <strong>12–18 months</strong> regardless of appearance.</div></div>
+        <div class="warn"><p>Don't use a pressure washer — it damages filter media and voids the filter warranty.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-icon icon-amber">⚡</div>
+        <div><div class="card-title">Quarterly water change</div><div class="card-meta">Every 3–4 months · 2–3 hrs</div></div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Add a line flush product the night before draining to clear biofilm from plumbing.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Power off completely. Drain via submersible pump or the drain valve.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Wipe the shell with a non-abrasive spa surface cleaner — no household cleaners.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Clean and rinse jetpaks while they're accessible.</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">Refill, run jets 10 min, then balance: <strong>TA first → pH → sanitizer</strong>.</div></div>
+        <div class="tip"><p>Use a garden hose pre-filter when refilling to remove metals and minerals from day one.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-icon icon-coral">🫧</div>
+        <div><div class="card-title">Shocking the water</div><div class="card-meta">Weekly or after heavy use · 10 min</div></div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Shock after every heavy use session (3+ people, 45+ min) and as part of weekly routine.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">With cover off and jets running, dissolve shock in a bucket of warm spa water first.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">FROG @ease: use <strong>MPS (non-chlorine) shock</strong>. Traditional chlorine: use <strong>dichlor shock</strong>.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Leave cover off for <strong>20 minutes</strong> after shocking to allow off-gassing.</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">Wait until FC returns to 3–5 ppm before use (usually 30–60 min for MPS shock).</div></div>
+        <div class="warn"><p>Never mix shock with other chemicals before adding to water. Add separately, 15 minutes apart.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST STRIP -->
+  <div id="analyze" class="section">
+    <p class="page-title">Analyze test strip</p>
+    <p class="page-sub">Photograph your test strip for instant readings and dosing advice</p>
+
+    <div id="api-setup" class="setup-box" style="display:none">
+      <div class="setup-title">Enter your Anthropic API key</div>
+      <div class="setup-desc">The AI analysis feature requires an Anthropic API key. Your key is stored locally on this device only and never sent anywhere except Anthropic's servers. Get a key at <strong>console.anthropic.com</strong>.</div>
+      <input type="password" class="setup-input" id="api-key-input" placeholder="sk-ant-..." />
+      <button class="btn-save" onclick="saveApiKey()">Save key</button>
+    </div>
+
+    <div class="camera-area" onclick="document.getElementById('file-input').click()">
+      <div class="camera-icon">📷</div>
+      <div class="camera-label">Tap to take or upload a photo</div>
+      <div class="camera-sub">Hold strip against white paper in good lighting</div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleImage(event)">
+    <img id="preview-img" alt="Test strip preview">
+    <button class="btn-primary" id="analyze-btn" onclick="analyzeStrip()">Analyze my test strip</button>
+    <div class="results-area" id="results-area"><div id="results-content"></div></div>
+  </div>
+
+  <!-- LOG -->
+  <div id="log" class="section">
+    <p class="page-title">Chemical log</p>
+    <p class="page-sub">Saved on this device — your full water history</p>
+    <div id="log-entries"><div class="empty-state">No entries yet.<br>Analyze a test strip to start your log.</div></div>
+    <button class="btn-ghost" id="clear-log-btn" onclick="clearLog()" style="display:none">Clear all entries</button>
+  </div>
+
+  <!-- FIX IT -->
+  <div id="trouble" class="section">
+    <p class="page-title">Fix it</p>
+    <p class="page-sub">Diagnose and resolve common problems</p>
+
+    <a href="https://www.bullfrogspas.com/customer-support/" class="support-banner" target="_blank">
+      <div class="support-icon">🛟</div>
+      <div><div class="support-title">Bullfrog customer support</div><div class="support-sub">bullfrogspas.com · live chat, phone &amp; warranty</div></div>
+      <div class="support-arrow">›</div>
+    </a>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-water">Appearance</span><span class="card-title">Cloudy water</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">Most likely cause</div>
+        <div class="cause-text">pH or TA out of range, or chlorine depleted. Test your water first — don't dose blindly.</div>
+        <div class="cause-label">Fix it</div>
+        <div class="cause-text">1. Balance pH (7.4–7.6) and TA (80–120 ppm). 2. Shock with appropriate shock for your system. 3. Run jets with cover off for 30 min. 4. Still cloudy after 24 hrs? Add clarifier and clean or replace your filter.</div>
+        <div class="warn"><p>Persistent cloudiness after balancing usually means a dirty or worn-out filter. When did you last clean it?</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-foam">Foam</span><span class="card-title">Excessive foaming</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">Most likely cause</div>
+        <div class="cause-text">Soaps, lotions, or detergent residue from swimwear. Low calcium hardness also causes foam.</div>
+        <div class="cause-label">Fix it</div>
+        <div class="cause-text">1. Add a defoamer short-term. 2. Shower before using the spa — most effective prevention. 3. Rinse swimwear without detergent. 4. Check calcium hardness (target: 150–250 ppm). 5. If foam keeps returning, a water change is the real fix.</div>
+        <div class="tip"><p>Quick test: shake a sealed bottle of spa water. Heavy foam that takes 10+ seconds to settle means your chemistry needs attention.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-smell">Odor</span><span class="card-title">Strong chlorine smell</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">What's actually happening</div>
+        <div class="cause-text">Counterintuitively, a strong chlorine smell usually means too little free chlorine — not too much. Chloramines (used-up chlorine reacting with body waste) are the culprit.</div>
+        <div class="cause-label">Fix it</div>
+        <div class="cause-text">1. Shock the water to break down chloramines. 2. Run jets with cover off for 20–30 min. 3. Retest FC and adjust to 3–5 ppm. 4. Check CYA (30–50 ppm) — high CYA blocks chlorine effectiveness.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-water">Appearance</span><span class="card-title">Green or discolored water</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">Most likely cause</div>
+        <div class="cause-text">Algae (green), metals in fill water (green/blue/brown), or a pH crash. Rare in hot tubs but happens with neglected chemistry or a fresh fill.</div>
+        <div class="cause-label">Fix it</div>
+        <div class="cause-text">1. Test pH, FC, and metals. 2. If metals present, add a metal sequestrant before anything else. 3. If algae, shock aggressively and brush surfaces. 4. Run filter continuously until clear. 5. No improvement in 48 hrs — drain and refill.</div>
+        <div class="warn"><p>Don't shock if metals are present — it causes staining. Sequestrant first, always.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-equipment">Equipment</span><span class="card-title">Jets have low pressure</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">Most likely cause</div>
+        <div class="cause-text">Dirty or clogged filter is #1. Air lock after a water change is #2.</div>
+        <div class="cause-label">Fix it</div>
+        <div class="cause-text">1. Check and clean the filter — if overdue, this is almost certainly the issue. 2. After a water change, open the air bleed valve near the pump to release trapped air. 3. Check that all jet faces are open — Bullfrog jetpaks have individual flow controls. 4. Inspect for kinked plumbing around the jetpaks.</div>
+        <a href="https://www.bullfrogspas.com/customer-support/" class="support-inline" target="_blank">
+          <div><div class="support-inline-text">Contact Bullfrog support</div><div class="support-inline-sub">For pump and equipment issues beyond DIY</div></div>
+          <div style="margin-left:auto;color:var(--blue-mid)">›</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="trouble-header" onclick="toggleCard(this)">
+        <span class="tag tag-equipment">Equipment</span><span class="card-title">Error code on display</span><div class="card-arrow">›</div>
+      </div>
+      <div class="card-body">
+        <div class="cause-label">Common codes</div>
+        <div class="cause-text">
+          <strong>OH / OHH:</strong> Overheat — water above 112°F. Turn off, remove cover, let cool. Check filter flow.<br><br>
+          <strong>FLO / FL1 / FL2:</strong> Flow error — dirty filter or air lock. Clean filter first.<br><br>
+          <strong>SN / SNSR:</strong> Sensor fault — power cycle the spa. Persists? Sensor likely needs replacement.<br><br>
+          <strong>DR / DRY:</strong> Dry fire protection — check water level first.
+        </div>
+        <a href="https://www.bullfrogspas.com/customer-support/" class="support-inline" target="_blank">
+          <div><div class="support-inline-text">Contact Bullfrog support</div><div class="support-inline-sub">Error codes not listed, or code won't clear</div></div>
+          <div style="margin-left:auto;color:var(--blue-mid)">›</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div id="schedule" class="section">
+    <p class="page-title">Maintenance schedule</p>
+    <p class="page-sub">Add tasks to your calendar — one at a time or all at once</p>
+
+    <button class="btn-add-all" onclick="addAllToCalendar()">Add all to Google Calendar</button>
+
+    <div class="section-label">Weekly</div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Chemical check &amp; balance</span><span class="freq freq-weekly">Weekly</span></div>
+      <div class="sched-desc">Test FC, pH, TA, CH, CYA. Adjust as needed. Shock after heavy use.</div>
+      <button class="cal-btn" onclick="addToCalendar('Chemical check & balance','Test FC, pH, TA, CH, CYA. Adjust as needed. Shock after heavy use.','WEEKLY',15)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Shock treatment</span><span class="freq freq-weekly">Weekly</span></div>
+      <div class="sched-desc">MPS shock for FROG @ease systems, dichlor for traditional chlorine.</div>
+      <button class="cal-btn" onclick="addToCalendar('Hot tub shock treatment','MPS shock for FROG @ease, dichlor for traditional chlorine. Leave cover off 20 min after.','WEEKLY',10)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+
+    <div class="section-label">Monthly</div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Filter clean</span><span class="freq freq-monthly">Monthly</span></div>
+      <div class="sched-desc">Remove, rinse, soak in cleaner for 1 hour, rinse again. Inspect for damage.</div>
+      <button class="cal-btn" onclick="addToCalendar('Hot tub filter clean','Remove filter, rinse low-pressure, soak in filter cleaner 1 hr, rinse, reinstall.','MONTHLY',20)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Cover inspection &amp; treatment</span><span class="freq freq-monthly">Monthly</span></div>
+      <div class="sched-desc">Clean with mild soap, apply 303 UV protectant. Check seals and hinges.</div>
+      <button class="cal-btn" onclick="addToCalendar('Hot tub cover maintenance','Clean cover with mild soap. Apply 303 UV protectant. Check seals and hinges.','MONTHLY',15)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+
+    <div class="section-label">Quarterly</div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Full water change</span><span class="freq freq-quarterly">Quarterly</span></div>
+      <div class="sched-desc">Drain, clean shell and jetpaks, refill with hose filter, rebalance from scratch.</div>
+      <button class="cal-btn" onclick="addToCalendar('Hot tub full water change','Line flush night before. Drain, clean shell and jetpaks, refill with hose filter. Balance TA then pH then sanitizer.','MONTHLY',150)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Filter deep clean or replace</span><span class="freq freq-quarterly">Quarterly</span></div>
+      <div class="sched-desc">Overnight soak in filter cleaner. Replace if older than 12–18 months.</div>
+      <button class="cal-btn" onclick="addToCalendar('Hot tub filter deep clean or replace','Overnight soak in filter cleaning solution. Inspect carefully. Replace if older than 12-18 months.','MONTHLY',20)"><div class="cal-dot"></div>Add to calendar</button>
+    </div>
+
+    <div class="section-label">As needed</div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">Jetpak inspection</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="sched-desc">Check for cracks, reduced flow, or rattling. Bullfrog jetpaks are swappable without draining.</div>
+    </div>
+    <div class="sched-task">
+      <div class="sched-top"><span class="sched-name">FROG @ease cartridge replacement</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="sched-desc">Replace SmartChlor cartridge when the float sinks. Typically every 3–4 weeks.</div>
+    </div>
+
+    <a href="https://www.bullfrogspas.com/customer-support/" class="support-banner" target="_blank" style="margin-top:24px">
+      <div class="support-icon">🛟</div>
+      <div><div class="support-title">Bullfrog customer support</div><div class="support-sub">Warranty, parts, and service scheduling</div></div>
+      <div class="support-arrow">›</div>
+    </a>
+  </div>
+
+  <!-- SUPPLIES -->
+  <div id="supplies" class="section">
+    <p class="page-title">Supplies</p>
+    <p class="page-sub">Recommended products with direct links to order</p>
+
+    <div class="info-box"><p>FROG @ease SmartChlor cartridges are exclusive to Bullfrog retailers and not available on Amazon. Everything else ships via Prime.</p></div>
+
+    <div class="section-label">Sanitizer system</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG @ease system kit</span><span class="freq freq-quarterly">Every 4 months</span></div>
+      <div class="supply-desc">Starter kit with mineral cartridge, SmartChlor cartridge, Jump Start, and test strips. Choose Classic (X, STIL, R Series) or Simplicity (M, A Series 2023+).</div>
+      <div class="supply-links">
+        <a href="https://shop.bullfrogspas.com/shop/water-care/chemicals/frog-ease-bullfrog-spas-system-kit/" class="shop-link link-bullfrog" target="_blank">Bullfrog — Classic</a>
+        <a href="https://shop.bullfrogspas.com/shop/water-care/frog-ease-simplicity-system-kit/" class="shop-link link-bullfrog" target="_blank">Bullfrog — Simplicity</a>
+      </div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG SmartChlor cartridges (3-pack)</span><span class="freq freq-monthly">Every 3–4 weeks</span></div>
+      <div class="supply-desc">Replace when the float sinks. Buy a 3-pack so you're never caught without one.</div>
+      <div class="supply-links">
+        <a href="https://shop.bullfrogspas.com/shop/water-care/chemicals/frog-ease-bullfrog-spas-smartcholr-replacement-cartridges-3-pack/" class="shop-link link-bullfrog" target="_blank">Bullfrog — Classic</a>
+        <a href="https://shop.bullfrogspas.com/shop/water-care/frog-ease-for-simplicity-smartchlor-replacement-cartridges-3-pack/" class="shop-link link-bullfrog" target="_blank">Bullfrog — Simplicity</a>
+      </div>
+    </div>
+
+    <div class="section-label">Shock</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG Maintain non-chlorine shock</span><span class="freq freq-monthly">Monthly or after heavy use</span></div>
+      <div class="supply-desc">Single-dose packets made for FROG @ease. Ready in 15 minutes. No measuring needed.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/dp/B08NK9WPD9" class="shop-link link-amazon" target="_blank">Amazon — 12-pack</a></div>
+    </div>
+
+    <div class="section-label">pH &amp; alkalinity</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG JumpH pH increaser</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="supply-desc">Raises pH when below 7.4. Balance TA before adjusting pH. TruDose cap for precise measuring.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/dp/B0FLRKLMXD" class="shop-link link-amazon" target="_blank">Amazon</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG DropH pH &amp; alkalinity decreaser</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="supply-desc">Lowers pH above 7.6 and high total alkalinity. One product handles both.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/dp/B0FLRFS7GV" class="shop-link link-amazon" target="_blank">Amazon</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG TArget total alkalinity increaser</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="supply-desc">Raises TA when below 80 ppm. Always adjust TA before pH. Target: 80–120 ppm.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/dp/B0FLRSFR6K" class="shop-link link-amazon" target="_blank">Amazon</a></div>
+    </div>
+
+    <div class="section-label">Calcium hardness</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG Soothe calcium hardness increaser</span><span class="freq freq-asneeded">As needed</span></div>
+      <div class="supply-desc">Raises CH when below 150 ppm. Low hardness causes foaming and shell corrosion. Target: 150–250 ppm.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/FROG-Soothe-Calcium-Hardness-Increaser/dp/B0FLRWXL5K" class="shop-link link-amazon" target="_blank">Amazon</a></div>
+    </div>
+
+    <div class="section-label">Test strips</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">FROG @ease test strips</span><span class="freq freq-weekly">Weekly</span></div>
+      <div class="supply-desc">Designed for FROG @ease — includes the "out" indicator for SmartChlor. Don't use standard 6-way strips with @ease.</div>
+      <div class="supply-links">
+        <a href="https://shop.bullfrogspas.com/shop/water-care/" class="shop-link link-bullfrog" target="_blank">Bullfrog shop</a>
+        <a href="https://www.amazon.com/FROG-ease-Test-Strips-Hot/dp/B01N3QRFHM" class="shop-link link-amazon" target="_blank">Amazon</a>
+      </div>
+    </div>
+
+    <div class="section-label">Filter &amp; maintenance</div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Filter cleaner</span><span class="freq freq-monthly">Monthly</span></div>
+      <div class="supply-desc">Soak monthly to dissolve oils, minerals, and biofilm that rinsing won't remove.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/Natural-Chemistry-05521-Filter-Perfect/dp/B000255SAS" class="shop-link link-amazon" target="_blank">Amazon — Natural Chemistry</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Spa surface cleaner</span><span class="freq freq-quarterly">Each water change</span></div>
+      <div class="supply-desc">Non-abrasive, safe for Bullfrog acrylic shell. Use during water changes to remove waterline buildup and mineral staining.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/Leisure-Time-45015A-Surface-Cleaner/dp/B000255S8K" class="shop-link link-amazon" target="_blank">Amazon — Leisure Time</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Line flush / plumbing cleaner</span><span class="freq freq-quarterly">Before each water change</span></div>
+      <div class="supply-desc">Add the night before draining to purge biofilm from plumbing lines. Don't skip this step.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/Natural-Chemistry-04131-Spa-Purge/dp/B000255SKA" class="shop-link link-amazon" target="_blank">Amazon — Spa Purge</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Garden hose pre-filter</span><span class="freq freq-quarterly">Each refill</span></div>
+      <div class="supply-desc">Removes metals and minerals before they enter your spa. Fort Collins water runs moderately hard — this prevents scaling from day one.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/Camco-40043-TastePURE-Canister-Reduces/dp/B000E5WMUM" class="shop-link link-amazon" target="_blank">Amazon — Camco inline filter</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Cover UV protectant (303 Aerospace)</span><span class="freq freq-monthly">Monthly</span></div>
+      <div class="supply-desc">Industry standard for hot tub cover vinyl. Colorado sun is hard on covers — apply after cleaning to extend life significantly.</div>
+      <div class="supply-links"><a href="https://www.amazon.com/303-Products-Aerospace-Protectant-Trigger/dp/B003B2YV8Q" class="shop-link link-amazon" target="_blank">Amazon — 303 Aerospace</a></div>
+    </div>
+    <div class="supply-card">
+      <div class="supply-top"><span class="supply-name">Replacement filter cartridges</span><span class="freq freq-asneeded">Every 12–18 months</span></div>
+      <div class="supply-desc">Order from Bullfrog to get the correct size for your model — filter dimensions vary by series and year.</div>
+      <div class="supply-links"><a href="https://shop.bullfrogspas.com/product-category/water-care/filters/" class="shop-link link-bullfrog" target="_blank">Bullfrog shop — filters by model</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentImageBase64 = null;
+
+// ── API KEY ──────────────────────────────────────────────────────────
+function getApiKey() {
+  try { return localStorage.getItem('bf_api_key') || ''; } catch { return ''; }
+}
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) { alert('That doesn\'t look like a valid Anthropic API key. It should start with sk-ant-'); return; }
+  try { localStorage.setItem('bf_api_key', key); } catch {}
+  document.getElementById('api-setup').style.display = 'none';
+  alert('API key saved. You\'re ready to analyze test strips!');
+}
+function checkApiKeySetup() {
+  const key = getApiKey();
+  const setupBox = document.getElementById('api-setup');
+  if (!key) setupBox.style.display = 'block';
+  else setupBox.style.display = 'none';
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'analyze') checkApiKeySetup();
+}
+
+// ── ACCORDION ────────────────────────────────────────────────────────
+function toggleCard(header) {
+  const card = header.closest('.card');
+  const body = card.querySelector('.card-body');
+  const arrow = header.querySelector('.card-arrow');
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('.card-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.card-arrow').forEach(a => { a.classList.remove('open'); a.textContent = '›'; });
+  if (!isOpen) { body.classList.add('open'); arrow.classList.add('open'); arrow.textContent = '›'; }
+}
+
+// ── IMAGE HANDLING ───────────────────────────────────────────────────
+function handleImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const dataUrl = ev.target.result;
+    currentImageBase64 = dataUrl.split(',')[1];
+    const img = document.getElementById('preview-img');
+    img.src = dataUrl; img.style.display = 'block';
+    document.getElementById('analyze-btn').style.display = 'block';
+    document.getElementById('results-area').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── STRIP ANALYSIS ───────────────────────────────────────────────────
+async function analyzeStrip() {
+  const apiKey = getApiKey();
+  if (!apiKey) { checkApiKeySetup(); return; }
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true; btn.textContent = 'Analyzing...';
+  const resultsArea = document.getElementById('results-area');
+  const resultsContent = document.getElementById('results-content');
+  resultsArea.style.display = 'block';
+  resultsContent.innerHTML = '<div class="loading-msg"><div class="spinner"></div><br>Reading your test strip...</div>';
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: currentImageBase64 } },
+          { type: 'text', text: 'You are a hot tub chemical expert. Analyze this test strip photo for a Bullfrog hot tub. Respond ONLY with a valid JSON object, no preamble, no markdown, no backticks. Structure: {"overall":"ok" or "needs_attention","summary":"One sentence","readings":[{"name":"Free Chlorine","value":"X ppm","target":"3-5 ppm","status":"ok|low|high","action":"What to do or No action needed"}]} Include if visible: Free Chlorine, pH, Total Alkalinity, Calcium Hardness, Cyanuric Acid. If unreadable: {"error":"Cannot read test strip. Please retake against white background in good lighting."}' }
+        ]}]
+      })
+    });
+    if (response.status === 401) { alert('Invalid API key. Please check your key in the setup box above.'); resultsArea.style.display = 'none'; checkApiKeySetup(); btn.disabled = false; btn.textContent = 'Analyze my test strip'; return; }
+    const data = await response.json();
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    let parsed;
+    try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch { throw new Error('parse'); }
+    if (parsed.error) { resultsContent.innerHTML = `<div class="warn"><p>${parsed.error}</p></div>`; btn.disabled = false; btn.textContent = 'Try again'; return; }
+    const oc = parsed.overall === 'ok' ? 'overall-ok' : 'overall-warn';
+    let html = `<div class="${oc}"><div class="ov-title">${parsed.overall === 'ok' ? 'Water looks good' : 'Water needs attention'}</div><div class="ov-sub">${parsed.summary}</div></div><div class="results-title">Readings &amp; recommendations</div>`;
+    for (const r of parsed.readings) {
+      const vc = r.status === 'ok' ? 'chem-val-ok' : r.status === 'low' ? 'chem-val-low' : 'chem-val-high';
+      const bc = r.status === 'ok' ? 'badge-ok' : r.status === 'low' ? 'badge-low' : 'badge-high';
+      const bt = r.status === 'ok' ? 'In range' : r.status === 'low' ? 'Low' : 'High';
+      html += `<div class="chem-row"><div class="chem-top"><span class="chem-name">${r.name}</span><span class="${vc}">${r.value}</span></div><div class="chem-range">Target: ${r.target} &nbsp;·&nbsp; <span class="badge ${bc}">${bt}</span></div>${r.status !== 'ok' ? `<div class="chem-action">${r.action}</div>` : ''}</div>`;
+    }
+    resultsContent.innerHTML = html;
+    saveLogEntry({ date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }), overall: parsed.overall, readings: parsed.readings });
+  } catch (e) {
+    resultsContent.innerHTML = `<div class="warn"><p>Something went wrong analyzing the image. Please try again.</p></div>`;
+  }
+  btn.disabled = false; btn.textContent = 'Analyze again';
+}
+
+// ── LOG ──────────────────────────────────────────────────────────────
+function saveLogEntry(entry) {
+  try {
+    const entries = loadLog();
+    entries.unshift(entry);
+    if (entries.length > 100) entries.splice(100);
+    localStorage.setItem('bullfrog_log', JSON.stringify(entries));
+    renderLog();
+  } catch (e) {}
+}
+function loadLog() {
+  try { const s = localStorage.getItem('bullfrog_log'); return s ? JSON.parse(s) : []; } catch { return []; }
+}
+function clearLog() {
+  if (!confirm('Clear all log entries? This cannot be undone.')) return;
+  try { localStorage.removeItem('bullfrog_log'); } catch {}
+  renderLog();
+}
+function renderLog() {
+  const entries = loadLog();
+  const container = document.getElementById('log-entries');
+  const clearBtn = document.getElementById('clear-log-btn');
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-state">No entries yet.<br>Analyze a test strip to start your log.</div>';
+    clearBtn.style.display = 'none'; return;
+  }
+  clearBtn.style.display = 'block';
+  container.innerHTML = entries.map(e => {
+    const chems = e.readings.map(r => {
+      const cls = r.status === 'ok' ? 'badge-ok' : r.status === 'low' ? 'badge-low' : 'badge-high';
+      const s = r.name.replace('Free Chlorine','FC').replace('Total Alkalinity','TA').replace('Calcium Hardness','CH').replace('Cyanuric Acid','CYA');
+      return `<span class="log-chem ${cls}">${s}: ${r.value}</span>`;
+    }).join('');
+    return `<div class="log-entry"><div class="log-date">${e.date} at ${e.time} &nbsp;·&nbsp; ${e.overall === 'ok' ? '✓ Balanced' : '⚠ Needs attention'}</div><div class="log-chems">${chems}</div></div>`;
+  }).join('');
+}
+
+// ── CALENDAR ─────────────────────────────────────────────────────────
+function addToCalendar(title, desc, freq, mins) {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
+  const end = new Date(start.getTime() + mins * 60000);
+  const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const rr = freq === 'WEEKLY' ? 'RRULE:FREQ=WEEKLY' : freq === 'MONTHLY' ? 'RRULE:FREQ=MONTHLY' : 'RRULE:FREQ=WEEKLY;INTERVAL=13';
+  const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${title}\nDESCRIPTION:${desc}\nDTSTART:${fmt(start)}\nDTEND:${fmt(end)}\n${rr}\nEND:VEVENT\nEND:VCALENDAR`;
+  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  const a = document.createElement('a'); a.href = url; a.download = title.replace(/\s+/g, '_') + '.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function addAllToCalendar() {
+  [
+    ['Chemical check & balance','Test FC, pH, TA, CH, CYA. Adjust as needed.','WEEKLY',15],
+    ['Hot tub shock treatment','MPS shock for FROG @ease, dichlor for traditional chlorine.','WEEKLY',10],
+    ['Hot tub filter clean','Rinse low-pressure, soak in filter cleaner 1 hr, reinstall.','MONTHLY',20],
+    ['Hot tub cover maintenance','Clean, apply 303 UV protectant. Check seals.','MONTHLY',15],
+    ['Hot tub full water change','Line flush night before. Drain, refill, rebalance.','MONTHLY',150],
+  ].forEach((t, i) => setTimeout(() => addToCalendar(...t), i * 400));
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+renderLog();
+</script>
+</body>
+</html>
